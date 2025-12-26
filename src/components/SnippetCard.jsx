@@ -3,13 +3,19 @@ import CodeBlock from './CodeBlock';
 
 function SnippetCard({ snippet, onDelete, onEdit, onToggleFavorite, viewMode = 'list' }) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [copySuccess, setCopySuccess] = useState(false);
+  const [copiedIndex, setCopiedIndex] = useState(null);
 
-  const handleCopy = async () => {
+  // Support both old single-code format and new multi-code format
+  const codeBlocks = snippet.codeBlocks || [{ 
+    code: snippet.code, 
+    language: snippet.language 
+  }];
+
+  const handleCopy = async (code, index) => {
     try {
-      await navigator.clipboard.writeText(snippet.code);
-      setCopySuccess(true);
-      setTimeout(() => setCopySuccess(false), 2000);
+      await navigator.clipboard.writeText(code);
+      setCopiedIndex(index);
+      setTimeout(() => setCopiedIndex(null), 2000);
     } catch (err) {
       console.error('Failed to copy:', err);
     }
@@ -29,7 +35,13 @@ function SnippetCard({ snippet, onDelete, onEdit, onToggleFavorite, viewMode = '
         <div>
           <h3>{snippet.title}</h3>
           <div className="snippet-badges">
-            <span className="language-badge">{snippet.language}</span>
+            {codeBlocks.length > 1 ? (
+              codeBlocks.map((block, i) => (
+                <span key={i} className="language-badge">{block.language}</span>
+              ))
+            ) : (
+              <span className="language-badge">{codeBlocks[0].language}</span>
+            )}
             {snippet.category && (
               <span className="category-badge">{snippet.category}</span>
             )}
@@ -38,19 +50,11 @@ function SnippetCard({ snippet, onDelete, onEdit, onToggleFavorite, viewMode = '
         <div className="snippet-actions">
           <button 
             onClick={() => onToggleFavorite(snippet.id)} 
-            className="icon-btn"
+            className="icon-btn favorite-btn"
             aria-label={snippet.isFavorite ? "Remove from favorites" : "Add to favorites"}
             title={snippet.isFavorite ? "Remove from favorites" : "Add to favorites"}
           >
             {snippet.isFavorite ? '⭐' : '☆'}
-          </button>
-          <button 
-            onClick={handleCopy} 
-            className="icon-btn"
-            aria-label="Copy code"
-            title="Copy to clipboard"
-          >
-            {copySuccess ? '✓' : '📋'}
           </button>
           <button 
             onClick={() => onEdit(snippet)} 
@@ -76,7 +80,22 @@ function SnippetCard({ snippet, onDelete, onEdit, onToggleFavorite, viewMode = '
       )}
       
       <div className={`code-container ${isExpanded ? 'expanded' : 'collapsed'}`}>
-        <CodeBlock code={snippet.code} language={snippet.language} />
+        {codeBlocks.map((block, index) => (
+          <div key={index} className="code-block-wrapper">
+            <div className="code-block-label">
+              <span className="language-badge">{block.language}</span>
+              <button
+                onClick={() => handleCopy(block.code, index)}
+                className="code-copy-btn"
+                aria-label="Copy code"
+                title="Copy to clipboard"
+              >
+                {copiedIndex === index ? '✓ Copied' : '📋 Copy'}
+              </button>
+            </div>
+            <CodeBlock code={block.code} language={block.language} />
+          </div>
+        ))}
       </div>
       
       <button 
