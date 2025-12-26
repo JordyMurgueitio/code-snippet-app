@@ -1,6 +1,7 @@
 import { useState } from 'react';
+import CodeBlock from './CodeBlock';
 
-function SnippetCard({ snippet, onDelete, onEdit }) {
+function SnippetCard({ snippet, onDelete, onEdit, onToggleFavorite, viewMode = 'list' }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
 
@@ -14,21 +15,57 @@ function SnippetCard({ snippet, onDelete, onEdit }) {
     }
   };
 
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
   return (
-    <div className="snippet-card">
+    <div className={`snippet-card snippet-card-${viewMode}`}>
       <div className="snippet-header">
         <div>
           <h3>{snippet.title}</h3>
-          <span className="language-badge">{snippet.language}</span>
+          <div className="snippet-badges">
+            <span className="language-badge">{snippet.language}</span>
+            {snippet.category && (
+              <span className="category-badge">{snippet.category}</span>
+            )}
+          </div>
         </div>
         <div className="snippet-actions">
-          <button onClick={handleCopy} className="icon-btn copy-btn">
+          <button 
+            onClick={() => onToggleFavorite(snippet.id)} 
+            className="icon-btn"
+            aria-label={snippet.isFavorite ? "Remove from favorites" : "Add to favorites"}
+            title={snippet.isFavorite ? "Remove from favorites" : "Add to favorites"}
+          >
+            {snippet.isFavorite ? '⭐' : '☆'}
+          </button>
+          <button 
+            onClick={handleCopy} 
+            className="icon-btn"
+            aria-label="Copy code"
+            title="Copy to clipboard"
+          >
             {copySuccess ? '✓' : '📋'}
           </button>
-          <button onClick={() => onEdit(snippet)} className="icon-btn edit-btn">
+          <button 
+            onClick={() => onEdit(snippet)} 
+            className="icon-btn"
+            aria-label="Edit snippet"
+            title="Edit"
+          >
             ✏️
           </button>
-          <button onClick={() => onDelete(snippet.id)} className="icon-btn delete-btn">
+          <button 
+            onClick={() => onDelete(snippet.id)} 
+            className="icon-btn"
+            aria-label="Delete snippet"
+            title="Delete"
+          >
             🗑️
           </button>
         </div>
@@ -39,9 +76,7 @@ function SnippetCard({ snippet, onDelete, onEdit }) {
       )}
       
       <div className={`code-container ${isExpanded ? 'expanded' : 'collapsed'}`}>
-        <pre>
-          <code>{snippet.code}</code>
-        </pre>
+        <CodeBlock code={snippet.code} language={snippet.language} />
       </div>
       
       <button 
@@ -53,7 +88,7 @@ function SnippetCard({ snippet, onDelete, onEdit }) {
       
       <div className="snippet-footer">
         <span className="snippet-date">
-          {new Date(snippet.createdAt).toLocaleDateString()}
+          {formatDate(snippet.createdAt)}
         </span>
       </div>
     </div>
