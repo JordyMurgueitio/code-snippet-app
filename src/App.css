@@ -81,6 +81,14 @@
   align-items: center;
   margin-bottom: 1.5rem;
   gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.toolbar-left,
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
 .snippet-count {
@@ -116,6 +124,44 @@
 
 .toggle-form-btn:active {
   transform: translateY(0);
+}
+
+/* Export/Import Buttons */
+.export-btn,
+.import-btn {
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background: white;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.export-btn:hover:not(:disabled),
+.import-btn:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+  transform: translateY(-1px);
+}
+
+.export-btn:active:not(:disabled),
+.import-btn:active {
+  transform: translateY(0);
+}
+
+.export-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.import-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 /* Snippet Form */

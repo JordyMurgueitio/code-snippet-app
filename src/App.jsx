@@ -58,6 +58,59 @@ function App() {
     ));
   };
 
+  const exportSnippets = () => {
+    const dataStr = JSON.stringify(snippets, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `code-snippets-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const importSnippets = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const importedSnippets = JSON.parse(e.target.result);
+        if (Array.isArray(importedSnippets)) {
+          // Ask user if they want to replace or merge
+          const shouldReplace = window.confirm(
+            `Found ${importedSnippets.length} snippets. Do you want to REPLACE all current snippets?\n\n` +
+            `Click OK to REPLACE, or Cancel to MERGE with existing snippets.`
+          );
+          
+          if (shouldReplace) {
+            setSnippets(importedSnippets);
+          } else {
+            // Merge: Update IDs to avoid conflicts
+            const maxId = snippets.length > 0 ? Math.max(...snippets.map(s => s.id)) : 0;
+            const newSnippets = importedSnippets.map((s, i) => ({
+              ...s,
+              id: maxId + i + 1
+            }));
+            setSnippets(prev => [...prev, ...newSnippets]);
+          }
+          alert(`Successfully imported ${importedSnippets.length} snippets!`);
+        } else {
+          alert('Invalid file format. Please select a valid snippets JSON file.');
+        }
+      } catch (error) {
+        alert('Error reading file. Please make sure it\'s a valid JSON file.');
+        console.error('Import error:', error);
+      }
+    };
+    reader.readAsText(file);
+    // Reset input so the same file can be imported again
+    event.target.value = '';
+  };
+
   const handleEdit = (snippet) => {
     setEditingSnippet(snippet);
     setShowForm(true);
@@ -113,22 +166,45 @@ function App() {
       <main className="app-main">
         <div className="container">
           <div className="toolbar">
-            <button 
-              onClick={() => setShowForm(!showForm)} 
-              className="toggle-form-btn"
-            >
-              {showForm ? '✕ Close' : '+ New Snippet'}
-            </button>
-            
-            {snippets.length > 0 && (
-              <div className="snippet-count">
-                {filteredSnippets.length === snippets.length ? (
-                  <span>{snippets.length} {snippets.length === 1 ? 'snippet' : 'snippets'}</span>
-                ) : (
-                  <span>{filteredSnippets.length} of {snippets.length} snippets</span>
-                )}
-              </div>
-            )}
+            <div className="toolbar-left">
+              <button 
+                onClick={() => setShowForm(!showForm)} 
+                className="toggle-form-btn"
+              >
+                {showForm ? '✕ Close' : '+ New Snippet'}
+              </button>
+              
+              {snippets.length > 0 && (
+                <div className="snippet-count">
+                  {filteredSnippets.length === snippets.length ? (
+                    <span>{snippets.length} {snippets.length === 1 ? 'snippet' : 'snippets'}</span>
+                  ) : (
+                    <span>{filteredSnippets.length} of {snippets.length} snippets</span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="toolbar-right">
+              <button 
+                onClick={exportSnippets}
+                className="export-btn"
+                title="Export all snippets to JSON file"
+                disabled={snippets.length === 0}
+              >
+                📥 Export
+              </button>
+              
+              <label className="import-btn" title="Import snippets from JSON file">
+                📤 Import
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={importSnippets}
+                  style={{ display: 'none' }}
+                />
+              </label>
+            </div>
           </div>
 
           {showForm && (
