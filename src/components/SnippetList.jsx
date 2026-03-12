@@ -1,31 +1,33 @@
 import SnippetCard from './SnippetCard';
 import CategoryGroup from './CategoryGroup';
 
-function SnippetList({ snippets, onDelete, onEdit, onToggleFavorite, viewMode, groupByCategory }) {
+function SnippetList({ snippets, onDelete, onEdit, onToggleFavorite, onDuplicate, viewMode, groupByCategory }) {
   if (snippets.length === 0) {
     return (
       <div className="empty-state">
-        <p className="empty-icon">📝</p>
+        <div className="empty-icon">
+          <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="16 18 22 12 16 6" />
+            <polyline points="8 6 2 12 8 18" />
+          </svg>
+        </div>
         <h3>No snippets found</h3>
-        <p>Start adding your favorite code snippets to build your collection!</p>
+        <p>Start building your collection by creating your first code snippet.</p>
+        <p className="empty-hint">Press <kbd>⌘N</kbd> to create a new snippet</p>
       </div>
     );
   }
 
-  // Show favorites first if any exist
   const favorites = snippets.filter(s => s.isFavorite);
   const nonFavorites = snippets.filter(s => !s.isFavorite);
 
   if (groupByCategory) {
-    // Group snippets by category
     const groupedSnippets = {};
-    
-    // Add favorites first if they exist
+
     if (favorites.length > 0) {
       groupedSnippets['⭐ Favorites'] = favorites;
     }
 
-    // Group non-favorites by category
     nonFavorites.forEach(snippet => {
       const category = snippet.category || 'Uncategorized';
       if (!groupedSnippets[category]) {
@@ -44,6 +46,7 @@ function SnippetList({ snippets, onDelete, onEdit, onToggleFavorite, viewMode, g
             onDelete={onDelete}
             onEdit={onEdit}
             onToggleFavorite={onToggleFavorite}
+            onDuplicate={onDuplicate}
             viewMode={viewMode}
           />
         ))}
@@ -51,7 +54,6 @@ function SnippetList({ snippets, onDelete, onEdit, onToggleFavorite, viewMode, g
     );
   }
 
-  // Flat view (favorites first)
   const orderedSnippets = [...favorites, ...nonFavorites];
 
   return (
@@ -63,6 +65,7 @@ function SnippetList({ snippets, onDelete, onEdit, onToggleFavorite, viewMode, g
           onDelete={onDelete}
           onEdit={onEdit}
           onToggleFavorite={onToggleFavorite}
+          onDuplicate={onDuplicate}
           viewMode={viewMode}
         />
       ))}
